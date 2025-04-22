@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arduino Web Serial</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+    }
+    button {
+      margin-top: 10px;
+    }
+    #status {
+      margin-top: 10px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Send Message to Arduino</h1>
+  <button id="connect">Connect to Arduino</button>
+  <input type="range" name="angle" step="1" id="angle" min="0" max="180" value="90" disabled>
+  <div id="status"></div>
+
+  <script>
+    let port;
+    let writer;
+
+    const connectButton = document.getElementById('connect');
+    const slider = document.getElementById('angle');
+    const status = document.getElementById('status');
+    const isWritigMessage = false;
+
+    connectButton.addEventListener('click', async () => {
+      try {
+        port = await navigator.serial.requestPort({
+          
+        });
+        await port.open({ baudRate: 9600 });
+
+        const encoder = new TextEncoderStream();
+        encoder.readable.pipeTo(port.writable);
+        writer = encoder.writable.getWriter();
+
+        slider.disabled = false;
+        status.textContent = 'Connected to Arduino!';
+        status.style.color = 'green';
+      } catch (error) {
+        status.textContent = 'Connection failed: ' + error;
+        status.style.color = 'red';
+      }
+    });
+
+    slider.addEventListener('input', async (e) => {
+      if (writer) {
+         const angle = e.target.value;
+         writer.write(angle.toString());
+         status.textContent = 'Message sent: ' + angle;
+         status.style.color = 'blue';
+      } 
+    });
+
+    
+  </script>
+</body>
+</html>
